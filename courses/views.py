@@ -3,11 +3,15 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db import IntegrityError
+from drf_spectacular.utils import extend_schema, OpenApiParameter 
+from drf_spectacular.types import OpenApiTypes
 import requests, os
 import re
 
 from .models import Course, Lesson, UserProgress
 from .serializers import CourseSerializer, LessonSerializer, UserProgressSerializer
+from .ai_providers import ProviderRegistry
+from .serializers import AskRequestSerializer, AskResponseSerializer
 
 class IsAuthenticatedOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -20,10 +24,28 @@ class CourseViewSet(viewsets.ModelViewSet):
     serializer_class = CourseSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name="course",
+            # description="ID курса, чтобы отфильтровать уроки данного курса",
+            # required=False,
+            # type=OpenApiTypes.INT,
+            # location=OpenApiParameter.QUERY,
+        )
+    ]
+)
 class LessonViewSet(viewsets.ModelViewSet):
     queryset = Lesson.objects.select_related('course').all()
     serializer_class = LessonSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        course_id = self.request.query_params.get('course')
+        if course_id:
+            qs = qs.filter(course_id=course_id)
+        return qs
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
@@ -35,64 +57,62 @@ def complete_lesson(request, pk: int):
         progress = UserProgress.objects.get(user=request.user, lesson=lesson)
     return Response(UserProgressSerializer(progress).data, status=status.HTTP_200_OK)
 
+def _parse_provider_list(s: str | None) -> list[str]:
+    if not s:
+        return []
+    return [p.strip().lower() for p in s.split(",") if p.strip()]
+
+@extend_schema(
+    request=AskRequestSerializer,
+    responses={200: AskResponseSerializer},
+)
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def ask_lesson(request, pk: int):
     lesson = get_object_or_404(Lesson, pk=pk)
     question = (request.data.get("question") or "").strip()
-    context = (lesson.content or "").strip()
 
-    # Ограничим размер контекста на всякий случай
-    context = context[:8000]
+    # Список провайдеров по умолчанию (из .env или дефолт)
+    default_chain = _parse_provider_list(os.getenv("DEFAULT_PROVIDERS")) or ["gigachat", "google"]
 
-    # Строгая инструкция: отвечать только из контекста
+    # Если пользователь указал конкретный провайдер — ставим его первым и добавляем остальные как фолбэк
+    requested = (request.data.get("provider") or request.query_params.get("provider") or "").strip().lower()
+    if requested:
+        chain = [requested] + [p for p in default_chain if p != requested]
+    else:
+        chain = default_chain
+
+    if not question:
+        return Response({"detail": "question is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    context = (lesson.content or "").strip()[:8000]
     system_text = (
         "Ты — AI-репетитор. Дай развернутый, но четкий ответ, "
         "основанный только на предоставленном контексте. "
         "Если ответа в контексте нет, так и скажи: 'Ответ не найден в контексте.'"
     )
-    user_text = (
-        f"Контекст урока:\n{context}\n\n"
-        f"Вопрос студента:\n{question}"
-    )
-
-    api_key = os.getenv("GOOGLE_API_KEY")
-    model = os.getenv("GOOGLE_MODEL", "gemini-2.5-flash")
-    print("GOOGLE_API_KEY_LOADED:", bool(api_key))
     fallback = "Ответ не найден в контексте."
 
-    if not api_key:
-        return Response({"answer": fallback})
+    answer = ""
+    provider_used = None
+    errors = []
 
-    try:
-        # REST-вызов Gemini (v1beta)
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-        payload = {
-            "system_instruction": {"parts": [{"text": system_text}]},
-            "contents": [
-                {"role": "user", "parts": [{"text": user_text}]}
-            ],
-            "generation_config": {
-                "temperature": 0.2,
-                "maxOutputTokens": 256
-            }
-        }
-        # Ключ передаем как query-параметр
-        resp = requests.post(url, params={"key": api_key}, json=payload, timeout=20)
-        data = resp.json()
-
-        # Извлечь первый текстовый ответ
-        answer = fallback
-        for cand in (data.get("candidates") or []):
-            parts = ((cand.get("content") or {}).get("parts") or [])
-            if parts and parts[0].get("text"):
-                answer = parts[0]["text"].strip()
+    for name in chain:
+        try:
+            provider = ProviderRegistry.create(name)
+            text = provider.ask(context=context, question=question, system_text=system_text) or ""
+            if text:
+                answer = text
+                provider_used = name
                 break
+            else:
+                errors.append(f"{name}: empty")
+        except Exception as e:
+            errors.append(f"{name}: {type(e).__name__}")
 
-        # На всякий случай, если модель «забылась»
-        if not answer:
-            answer = fallback
+    body = {"answer": answer or fallback, "provider": provider_used or chain[0]}
+    # Для отладки
+    if os.getenv("DEBUG", "False").lower() == "true":
+        body["meta"] = {"chain": chain, "errors": errors}
 
-        return Response({"answer": answer})
-    except Exception:
-        return Response({"answer": fallback})
+    return Response(body, status=status.HTTP_200_OK)

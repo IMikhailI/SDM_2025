@@ -16,3 +16,11 @@ class UserProgressSerializer(serializers.ModelSerializer):
         model = UserProgress
         fields = ['id', 'user', 'lesson', 'completed_at']
         read_only_fields = ['user', 'completed_at']
+
+class AskRequestSerializer(serializers.Serializer):
+    question = serializers.CharField()
+    provider = serializers.ChoiceField(choices=["gigachat", "google"], required=False)
+
+class AskResponseSerializer(serializers.Serializer):
+    answer = serializers.CharField()
+    provider = serializers.CharField()
