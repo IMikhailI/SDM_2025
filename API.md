@@ -1,13 +1,7 @@
-# API Документация — EduNext Backend (СДМ)
+# API Документация — EduNext Backend
 
-**База URL:** `http://127.0.0.1:8000/api/`  
-Формат: JSON (`Content-Type: application/json`)  
-Аутентификация: Bearer JWT (`Authorization: Bearer <access>`)
 
-> Полная интерактивная документация: **Swagger UI** — `/api/docs/`, **OpenAPI JSON** — `/api/schema/`.
-
-> **Важно:** роуты DRF со слэшем на конце. Используйте `/api/lessons/`, `/api/courses/1/` и т. п.  
-> Если забыли слэш — добавьте флаг `-L` к `curl`.
+> Полная интерактивная документация: **Swagger UI** — `/api/docs/`
 
 ---
 
@@ -15,20 +9,22 @@
 
 1) **Регистрация пользователя** (один раз):
 ```bash
-curl -s -X POST http://127.0.0.1:8000/api/auth/register/   -H "Content-Type: application/json"   -d '{"username":"tester","password":"tester_pass"}'
+curl -i -X POST http://127.0.0.1:8000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"tester","password":"tester_pass"}'
 ```
 > Если пользователь уже существует, можно сразу перейти к шагу 2.
 
-2) **Получение JWT‑токенов** (access/refresh):
+2) **Получение JWT‑токена**:
 ```bash
-curl -s -X POST http://127.0.0.1:8000/api/auth/token/   -H "Content-Type: application/json"   -d '{"username":"tester","password":"tester_pass"}'
+TOKENS=$(curl -sS -X POST http://127.0.0.1:8000/api/auth/token \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"tester","password":"tester_pass"}')
 ```
-Ответ содержит поля `access` и `refresh`.
 
 3) (Опционально) **Сохранить токен в переменную окружения** (для примеров ниже):
 ```bash
-# Вставьте сюда access-токен из ответа шагa 2
-ACCESS="<вставьте_сюда_access_token>"
+ACCESS=$(python3 -c 'import sys,json; print(json.load(sys.stdin)["access"])' <<<"$TOKENS")
 ```
 
 ---
@@ -56,9 +52,7 @@ ACCESS="<вставьте_сюда_access_token>"
    - [POST /api/lessons/{id}/complete/](#post-apilessonsidcomplete)
 5. [AI‑вопрос по уроку](#ai-вопрос-по-уроку)
    - [POST /api/lessons/{id}/ask/](#post-apilessonsidask)
-6. [Системные](#Системные)
-   - [GET /api/docs/](#get-apidocs)
-   - [GET /api/schema/](#get-apischema)
+
 
 > В примерах с изменением данных (`POST/PUT/PATCH/DELETE`) предполагается, что в переменной окружения `ACCESS` лежит корректный access‑токен.
 
@@ -359,21 +353,3 @@ curl -X POST http://127.0.0.1:8000/api/lessons/$LESSON_ID/ask/   -H "Authorizati
 ```
 
 ---
-
-## Системные
-
-### GET /api/docs/
-Swagger UI.
-
-**Рабочий пример**
-```bash
-xdg-open http://127.0.0.1:8000/api/docs/ 2>/dev/null || open http://127.0.0.1:8000/api/docs/
-```
-
-### GET /api/schema/
-OpenAPI JSON‑схема.
-
-**Рабочий пример (curl)**
-```bash
-curl -s http://127.0.0.1:8000/api/schema/ | head
-```

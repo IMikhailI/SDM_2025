@@ -2,7 +2,15 @@ from django.contrib.auth.models import User
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import permissions, status
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema
 
+from .serializers import RegisterRequestSerializer, RegisterResponseSerializer
+
+@extend_schema(
+    tags=['auth'],
+    request=RegisterRequestSerializer,
+    responses={201: RegisterResponseSerializer, 400: None}
+)
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def register(request):
