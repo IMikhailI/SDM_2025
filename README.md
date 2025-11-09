@@ -1,5 +1,8 @@
 # EduNext Backend
 
+Ссылка на видео-презентацию проекта
+`https://drive.google.com/drive/folders/1pDCvgZpjiSs_dv9mm_PzT1wCX2fHx7H5?usp=sharing`
+
 Django + DRF сервис для учебной платформы с курсами и уроками, трекингом прогресса пользователя и AI‑помощником (GigaChat / Google). Проект аккуратно документирован, снабжён готовой фикстурой данных и автогенерируемой Swagger‑документацией.
 
 ---
