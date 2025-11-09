@@ -11,8 +11,8 @@ ENV/
 env/
 
 # Environment / secrets
-.env
-.env.*
+# .env
+# .env.*
 
 # Django
 *.log

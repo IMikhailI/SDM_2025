@@ -1,54 +1,65 @@
 [
-{
-  "model": "courses.course",
-  "pk": 1,
-  "fields": {
-    "title": "Demo (patched)",
-    "description": "description curses"
+  {
+    "model": "courses.course",
+    "pk": 1,
+    "fields": {
+      "title": "Python: основы",
+      "description": "Базовый курс по Python: переменные, условия, циклы."
+    }
+  },
+  {
+    "model": "courses.course",
+    "pk": 2,
+    "fields": {
+      "title": "Django: быстрый старт",
+      "description": "Модели, сериализаторы, ViewSet и маршрутизация в DRF."
+    }
+  },
+
+  {
+    "model": "courses.lesson",
+    "pk": 1,
+    "fields": {
+      "course": 1,
+      "title": "Переменные",
+      "content": "Переменные — это имена для ссылок на значения. Типы: int, float, bool, str, list, dict. Присваивание через '=': x = 10. Имена в snake_case."
+    }
+  },
+  {
+    "model": "courses.lesson",
+    "pk": 2,
+    "fields": {
+      "course": 1,
+      "title": "Условия",
+      "content": "Условные конструкции if/elif/else позволяют выполнять код в зависимости от логического выражения. Пример: if x > 0: print('plus')."
+    }
+  },
+  {
+    "model": "courses.lesson",
+    "pk": 3,
+    "fields": {
+      "course": 1,
+      "title": "Циклы",
+      "content": "Циклы for/while повторяют операции. Пример: for name in users: print(name). Цикл while выполняется, пока условие истинно."
+    }
+  },
+
+  {
+    "model": "courses.lesson",
+    "pk": 4,
+    "fields": {
+      "course": 2,
+      "title": "Модели",
+      "content": "Django ORM: описываем модели, миграции, связи. Типовые поля: CharField, TextField, ForeignKey."
+    }
+  },
+  {
+    "model": "courses.lesson",
+    "pk": 5,
+    "fields": {
+      "course": 2,
+      "title": "ViewSet и роутер",
+      "content": "DRF ViewSet + DefaultRouter дают CRUD со слэшами. Пример маршрутов: /api/courses/, /api/courses/1/."
+    }
   }
-},
-{
-  "model": "courses.course",
-  "pk": 7,
-  "fields": {
-    "title": "КУРС 2",
-    "description": "описание курса"
-  }
-},
-{
-  "model": "courses.lesson",
-  "pk": 1,
-  "fields": {
-    "course": 1,
-    "title": "Variables",
-    "content": "Переменные — это именованные ссылки на значения. Они позволяют хранить и переиспользовать данные.\nТипы данных: целые числа (int), числа с плавающей точкой (float), логические (bool), строки (str), списки (list), словари (dict).\nПрисваивание выполняется оператором '=', например: x = 10.\nИменование: использовать snake_case, начинать с буквы, не использовать пробелы.\nНеизменяемые типы: int, float, bool, str, tuple; изменяемые: list, dict, set.\nОперации со строками: конкатенация (+), умножение на число, методы .upper()/.lower()/.split()."
-  }
-},
-{
-  "model": "courses.lesson",
-  "pk": 4,
-  "fields": {
-    "course": 1,
-    "title": "Циклы",
-    "content": "Циклы позволяют повторять одни и те же действия много раз, пока выполняется условие, что помогает автоматизировать рутинные задачи. Например, в программе можно с помощью цикла пройтись по списку учеников и вывести их имена по очереди, а с помощью цикла while — выполнять шаги, пока счётчик не достигнет заданного значения."
-  }
-},
-{
-  "model": "courses.lesson",
-  "pk": 5,
-  "fields": {
-    "course": 7,
-    "title": "string",
-    "content": "string"
-  }
-},
-{
-  "model": "courses.lesson",
-  "pk": 6,
-  "fields": {
-    "course": 7,
-    "title": "УРОК 1 К КУРСУ 2",
-    "content": "КОНТЕНТ 1 УРОКА"
-  }
-}
 ]

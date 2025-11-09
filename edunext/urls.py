@@ -5,6 +5,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from courses.views import CourseViewSet, LessonViewSet, complete_lesson, ask_lesson
 from accounts.views import register
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from courses.views import generate_task, check_task
 
 router = DefaultRouter()
 router.register(r'courses', CourseViewSet, basename='course')
@@ -22,4 +23,7 @@ urlpatterns = [
     
     path('api/lessons/<int:pk>/complete', complete_lesson, name='complete_lesson'),
     path('api/lessons/<int:pk>/ask', ask_lesson, name='ask_lesson'),
+
+    path('api/lessons/<int:pk>/generate-task', generate_task, name='generate-task'),
+    path('api/tasks/<int:pk>/check', check_task, name='check-task'),
 ]

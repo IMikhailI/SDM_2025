@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Course, Lesson, UserProgress
+from .models import Course, Lesson, UserProgress, GeneratedTask
 
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -24,3 +24,19 @@ class AskRequestSerializer(serializers.Serializer):
 class AskResponseSerializer(serializers.Serializer):
     answer = serializers.CharField()
     provider = serializers.CharField()
+
+
+# Дополнительное задание
+
+class GeneratedTaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GeneratedTask
+        fields = ['id', 'lesson', 'user', 'task_text', 'solution', 'student_answer', 'is_correct', 'created_at']
+        read_only_fields = ['id', 'user', 'created_at', 'solution', 'student_answer', 'is_correct']
+
+class CheckTaskRequestSerializer(serializers.Serializer):
+    answer = serializers.CharField()
+
+class CheckTaskResponseSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    is_correct = serializers.BooleanField()

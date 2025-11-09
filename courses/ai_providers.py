@@ -1,7 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Dict, Type, Optional, Any
-import os, base64, uuid, requests
+from typing import Dict, Type, Optional
+import os, uuid, requests
 
 
 class BaseAIProvider(ABC):
@@ -10,7 +10,7 @@ class BaseAIProvider(ABC):
     def ask(self, context: str, question: str, system_text: str) -> str: ...
 
 
-# -------- Google (REST v1) --------
+# Google Gemini
 class GoogleGeminiProvider(BaseAIProvider):
     def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
         self.api_key = api_key or os.getenv("GOOGLE_API_KEY", "")
@@ -35,7 +35,6 @@ class GoogleGeminiProvider(BaseAIProvider):
         except Exception:
             return ""
 
-        # первый текст из candidates[*].content.parts[*].text
         for cand in (data.get("candidates") or []):
             content = cand.get("content") or {}
             for part in (content.get("parts") or []):
@@ -45,15 +44,13 @@ class GoogleGeminiProvider(BaseAIProvider):
         return ""
 
 
-# -------- Sber GigaChat --------
-# === ultra-min GigaChat ===
+# Sber GigaChat
 class GigaChatProvider(BaseAIProvider):
     AUTH_URL = "https://ngw.devices.sberbank.ru:9443/api/v2/oauth"
     API_URL  = "https://gigachat.devices.sberbank.ru/api/v1/chat/completions"
     MODEL    = "GigaChat"
 
     def _token(self) -> str:
-        import uuid, requests, os
         basic = (os.getenv("SBER_BASIC_AUTH") or "").strip()
         if basic.lower().startswith("basic "):
             basic = basic.split(" ", 1)[1].strip()
@@ -114,7 +111,7 @@ class GigaChatProvider(BaseAIProvider):
             return ""
 
 
-# -------- Registry (простая фабрика) --------
+# Registry
 class ProviderRegistry:
     _providers: Dict[str, Type[BaseAIProvider]] = {
         "google":   GoogleGeminiProvider,
@@ -124,5 +121,29 @@ class ProviderRegistry:
     @classmethod
     def create(cls, name: str) -> BaseAIProvider:
         name = (name or "").lower()
-        # дефолт — GigaChat (стабильный у тебя)
         return (cls._providers.get(name) or GigaChatProvider)()
+
+def provider_chain(env_value: str | None, override: str | None = None) -> list[str]:
+    base = [p.strip().lower() for p in (env_value or "").split(",") if p.strip()]
+    ov = (override or "").strip().lower()
+    return [ov] + [p for p in base if p != ov] if ov else base
+
+def ask_ai(
+    *,
+    prompt: str,
+    providers: list[str] | None = None,
+    system_text: str = "Ты — помощник. Отвечай чётко и по делу.",
+    context: str = "",
+) -> str:
+    chain = providers or provider_chain(os.getenv("DEFAULT_PROVIDERS"))
+    question = prompt
+
+    for name in chain:
+        try:
+            provider = ProviderRegistry.create(name)
+            text = provider.ask(context=context, question=question, system_text=system_text) or ""
+            if text.strip():
+                return text.strip()
+        except Exception:
+            continue
+    return ""

@@ -1,9 +1,10 @@
-# API Документация — EduNext Backend
+# API Документация - EduNext Backend
 
 
-> Полная интерактивная документация: **Swagger UI** — `/api/docs/`
+> Полная интерактивная документация: **Swagger UI** - `/api/docs/`
 
 ---
+# Основное задание
 
 ## 🧰 Подготовка (получение токена, чтобы примеры работали)
 
@@ -288,13 +289,13 @@ curl -X PUT http://127.0.0.1:8000/api/lessons/$LESSON_ID/   -H "Authorization: B
 
 **Тело запроса (пример)**
 ```json
-{ "title": "Variables — updated" }
+{ "title": "Variables - updated" }
 ```
 
 **Рабочий пример (curl)**
 ```bash
 LESSON_ID=1
-curl -X PATCH http://127.0.0.1:8000/api/lessons/$LESSON_ID/   -H "Authorization: Bearer $ACCESS"   -H "Content-Type: application/json"   -d '{"title":"Variables — updated"}'
+curl -X PATCH http://127.0.0.1:8000/api/lessons/$LESSON_ID/   -H "Authorization: Bearer $ACCESS"   -H "Content-Type: application/json"   -d '{"title":"Variables - updated"}'
 ```
 
 ---
@@ -339,7 +340,7 @@ curl -X POST http://127.0.0.1:8000/api/lessons/$LESSON_ID/complete/   -H "Author
 ```json
 { "question": "Объясни разницу между var и let", "provider": "gigachat" }
 ```
-- `provider` — необязательное поле: `"gigachat"` или `"google"`; если не указано, используется первый доступный из `DEFAULT_PROVIDERS`.
+- `provider` - необязательное поле: `"gigachat"` или `"google"`; если не указано, используется первый доступный из `DEFAULT_PROVIDERS`.
 
 **Успех: 200 OK**
 ```json
@@ -353,3 +354,5 @@ curl -X POST http://127.0.0.1:8000/api/lessons/$LESSON_ID/ask/   -H "Authorizati
 ```
 
 ---
+
+# Дополнительное задание

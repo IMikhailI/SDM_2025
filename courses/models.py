@@ -23,3 +23,21 @@ class UserProgress(models.Model):
 
     class Meta:
         unique_together = ('user', 'lesson')
+
+
+# Дополнительное задание
+
+class GeneratedTask(models.Model):
+    lesson = models.ForeignKey('Lesson', on_delete=models.CASCADE, related_name='generated_tasks')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='generated_tasks')
+    task_text = models.TextField()
+    solution = models.TextField()
+    student_answer = models.TextField(blank=True, null=True)
+    is_correct = models.BooleanField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'Task#{self.id} lesson={self.lesson_id} user={self.user_id}'
