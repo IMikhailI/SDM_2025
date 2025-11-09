@@ -30,31 +30,6 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Создайте `.env` в корне проекта (или используйте уже добавленный) со своими значениями:
-
-```dotenv
-DEBUG=True
-SECRET_KEY=change-me
-ALLOWED_HOSTS=*
-
-DB_NAME=edunext
-DB_USER=edunext
-DB_PASSWORD=edunext
-DB_HOST=127.0.0.1
-DB_PORT=5432
-
-# AI (опционально для /api/lessons/{id}/ask)
-DEFAULT_PROVIDERS=gigachat,google
-
-GOOGLE_API_KEY=...
-GOOGLE_MODEL=gemini-2.5-flash
-
-# Для GigaChat (если используете его)
-SBER_BASIC_AUTH=...        # base64(client_id:client_secret) или аналогичный токен в вашей реализации
-SBER_AUTH_URL=...
-SBER_API_URL=...
-```
-
 ### 2) Поднять PostgreSQL
 Локально через Docker:
 ```bash
